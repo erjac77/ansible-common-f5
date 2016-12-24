@@ -34,4 +34,4 @@ Apache 2.0
 
 ## AUTHOR INFORMATION
 
-Eric Jacob (@erjac77)
+Eric Jacob ([@erjac77](http://erjac77.blogspot.ca/))
