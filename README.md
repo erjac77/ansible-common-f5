@@ -4,8 +4,8 @@ This repository provides utility classes and helper functions to ease the intera
 
 ## REQUIREMENTS
 
-* Ansible >= 2.2.0 (ansible)
-* F5 Python SDK >= 2.1.0 (f5-sdk)
+* Ansible >= 2.3.0 (ansible)
+* F5 Python SDK >= 2.2.2 (f5-sdk)
 
 ## INSTALLATION
 
