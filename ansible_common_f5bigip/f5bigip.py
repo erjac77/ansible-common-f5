@@ -41,11 +41,11 @@ except ImportError as e:
 # Common choices
 F5BIGIP_ACTIVATION_CHOICES = ['enabled', 'disabled']
 F5BIGIP_POLAR_CHOICES = ['yes', 'no']
-F5BIGIP_SWITCH_CHOICES = ['on', 'off']
 F5BIGIP_SEVERITY_CHOICES = ['alert', 'crit', 'debug', 'emerg', 'err', 'info', 'notice', 'warning']
 F5BIGIP_STATE_CHOICES = ['present', 'absent']
+F5BIGIP_SWITCH_CHOICES = ['on', 'off']
 
-# Common argument spec
+# Common arguments
 F5BIGIP_COMMON_ARGS = dict(
     f5bigip_hostname=dict(type='str', required=True),
     f5bigip_username=dict(type='str', required=True),
@@ -57,7 +57,8 @@ F5BIGIP_COMMON_OBJ_ARGS = dict(
 )
 F5BIGIP_COMMON_NAMED_OBJ_ARGS = dict(
     name=dict(type='str', required=True),
-    partition=dict(type='str', default='Common')
+    partition=dict(type='str', default='Common'),
+    sub_path=dict(type='str'),
 )
 
 ### F5 BIG-IP Classes ###
@@ -193,13 +194,13 @@ class F5BigIpBaseObject(F5BigIpClient):
                 if isinstance(new_val, set):
                     if cur_val is None:
                         cur_val = set()
-                    if self.state == "absent":
-                        new_list = list(cur_val - new_val)
-                        if len(new_list) < len(cur_val):
-                            cparams[key] = new_list
                     if self.state == "present":
                         new_list = list(cur_val | new_val)
                         if len(new_list) > len(cur_val):
+                            cparams[key] = new_list
+                    if self.state == "absent":
+                        new_list = list(cur_val - new_val)
+                        if len(new_list) < len(cur_val):
                             cparams[key] = new_list
                 # If not...
                 else:
@@ -222,10 +223,10 @@ class F5BigIpBaseObject(F5BigIpClient):
         """Send the buffered object to the BIG-IP system, depending upon the state of the object."""
         result = dict()
 
-        if self.state == "absent":
-            has_changed = self._absent()
-        elif self.state == "present":
+        if self.state == "present":
             has_changed = self._present()
+        elif self.state == "absent":
+            has_changed = self._absent()
 
         result.update(dict(changed=has_changed))
         return result
@@ -235,18 +236,12 @@ class F5BigIpObject(F5BigIpBaseObject):
 
     def _exists(self):
         """Check for the existence of the named object on the BIG-IP system."""
-        return self.methods['exists'](
-            name=self.params['name'],
-            partition=self.params['partition']
-        )
+        return self.methods['exists'](**self._get_resource_id_from_params())
 
     def _read(self):
         """Load an already configured object from the BIG-IP system."""
         self._check_load_params()
-        return self.methods['read'](
-            name=self.params['name'],
-            partition=self.params['partition']
-        )
+        return self.methods['read'](**self._get_resource_id_from_params())
 
     def _create(self):
         """Create the object on the BIG-IP system."""
@@ -283,7 +278,7 @@ class F5BigIpObject(F5BigIpBaseObject):
 
         # Make sure it is gone
         if self._exists():
-            raise AnsibleModuleF5BigIpError("Failed to delete the object")
+            raise AnsibleModuleF5BigIpError("Failed to delete the object.")
 
         return True
 
@@ -308,6 +303,28 @@ class F5BigIpObject(F5BigIpBaseObject):
     def _strip_partition(self, name):
         partition_prefix = "/{0}/".format(self.params['partition'])
         return str(name.replace(partition_prefix, ''))
+
+    def _get_resource_id_from_params(self):
+        res_id_args = { 'name': self.params['name'] }
+
+        if self.params['partition'] is not None:
+            res_id_args.update({ 'partition': self.params['partition'] })
+        if self.params['subPath'] is not None:
+            res_id_args.update({ 'subPath': self.params['subPath'] })
+
+        return res_id_args
+
+    def _get_resource_id_from_path(self, path):
+        res_id_args = path.split('/')
+
+        if len(res_id_args) == 1:
+            return { 'partition': self.params['partition'], 'name': res_id_args[0] }
+        elif len(res_id_args) == 2:
+            return { 'partition': res_id_args[0], 'name': res_id_args[1] }
+        elif len(res_id_args) == 3:
+            return { 'partition': res_id_args[0], 'subPath': res_id_args[1], 'name': res_id_args[2] }
+        else:
+            raise AnsibleModuleF5BigIpError("Invalid resource id.")
 
 class F5BigIpUnnamedObject(F5BigIpBaseObject):
     """Base class for all F5 BIG-IP unnamed objects
@@ -391,12 +408,6 @@ def change_dict_naming_convention(d, convert_fn):
     for k, v in d.iteritems():
         new_v = v
         new[convert_fn(k)] = new_v
-        #if isinstance(v, dict):
-        #    new_v = change_dict_naming_convention(v, convert_fn)
-        #elif isinstance(v, list):
-        #    new_v = list()
-        #    for x in v:
-        #        new_v.append(change_dict_naming_convention(x, convert_fn))
 
     return new
 
@@ -405,8 +416,6 @@ def format_value(value):
 
     if isinstance(value, basestring):
         formatted_value = value.strip()
-    #if isinstance(value, int):
-    #    formatted_value = str(value)
     if isinstance(value, list):
         formatted_value = set(value)
 
