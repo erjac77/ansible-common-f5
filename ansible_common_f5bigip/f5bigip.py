@@ -24,10 +24,12 @@ from abc import ABCMeta, abstractmethod
 from ansible.module_utils.basic import *
 from six import iterkeys
 
-# Disable Insecure Request Warning
 import requests
+from requests.exceptions import HTTPError
+# Disable Insecure Request Warning
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+
 
 # Make sure the f5-sdk is installed on the host
 HAS_F5SDK = True
@@ -236,7 +238,10 @@ class F5BigIpObject(F5BigIpBaseObject):
 
     def _exists(self):
         """Check for the existence of the named object on the BIG-IP system."""
-        return self.methods['exists'](**self._get_resource_id_from_params())
+        try:
+            return self.methods['exists'](**self._get_resource_id_from_params())
+        except HTTPError as err:
+            return False
 
     def _read(self):
         """Load an already configured object from the BIG-IP system."""
