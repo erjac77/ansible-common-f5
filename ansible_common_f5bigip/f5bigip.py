@@ -307,24 +307,32 @@ class F5BigIpObject(F5BigIpBaseObject):
     def _get_resource_id_from_params(self):
         res_id_args = { 'name': self.params['name'] }
 
-        if self.params['partition'] is not None:
+        if 'partition' in self.params and self.params['partition'] is not None:
             res_id_args.update({ 'partition': self.params['partition'] })
-        if self.params['subPath'] is not None:
+        if 'subPath' in self.params and self.params['subPath'] is not None:
             res_id_args.update({ 'subPath': self.params['subPath'] })
 
         return res_id_args
 
     def _get_resource_id_from_path(self, path):
-        res_id_args = path.split('/')
+        res_id_args = {}
+        path_segments = path.split('/')
 
-        if len(res_id_args) == 1:
-            return { 'partition': self.params['partition'], 'name': res_id_args[0] }
-        elif len(res_id_args) == 2:
-            return { 'partition': res_id_args[0], 'name': res_id_args[1] }
-        elif len(res_id_args) == 3:
-            return { 'partition': res_id_args[0], 'subPath': res_id_args[1], 'name': res_id_args[2] }
+        if len(path_segments) == 1:
+            res_id_args.update({ 'name': path_segments[0] })
+            if 'partition' in self.params and self.params['partition'] is not None:
+                res_id_args.update({ 'partition': self.params['partition'] })
+        elif len(path_segments) == 2:
+            res_id_args.update({ 'partition': path_segments[0] })
+            res_id_args.update({ 'name': path_segments[1] })
+        elif len(path_segments) == 3:
+            res_id_args.update({ 'partition': path_segments[0] })
+            res_id_args.update({ 'subPath': path_segments[1] })
+            res_id_args.update({ 'name': path_segments[2] })
         else:
             raise AnsibleModuleF5BigIpError("Invalid resource id.")
+
+        return res_id_args
 
 class F5BigIpUnnamedObject(F5BigIpBaseObject):
     """Base class for all F5 BIG-IP unnamed objects
