@@ -1,10 +1,14 @@
-# F5 BIG-IP COMMON UTILITY MODULE FOR ANSIBLE
+# F5 COMMON UTILITY MODULE FOR ANSIBLE
 
-This repository provides utility classes and helper functions to ease the interaction between Ansible and F5 BIG-IP systems.
+This repository provides utility classes and helper functions to ease the interaction between Ansible and F5 systems.
+
+* BIG-IP
+* BIG-IQ
+* iWorkflow
 
 ## REQUIREMENTS
 
-* Ansible >= 2.3.0 (ansible)
+* Ansible >= 2.2.0 (ansible)
 * F5 Python SDK >= 2.2.2 (f5-sdk)
 
 ## INSTALLATION
@@ -24,8 +28,8 @@ cd ansible
 virtualenv venv
 source ./venv/bin/activate
 
-# Install the F5 BIG-IP Common Utility Module for Ansible and all its dependencies (ansible, f5-sdk, etc.)
-pip install git+git://github.com/erjac77/ansible-common-f5bigip.git#egg=ansible-common-f5bigip
+# Install the F5 Common Utility Module for Ansible and all its dependencies (ansible, f5-sdk, etc.)
+pip install git+git://github.com/erjac77/ansible-common-f5.git#egg=ansible-common-f5
 ```
 
 ## LICENSE

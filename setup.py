@@ -14,22 +14,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import ansible_common_f5bigip
+import ansible_common_f5
 
 from setuptools import find_packages
 from setuptools import setup
 
 setup(
-    name='ansible-common-f5bigip',
-    version=ansible_common_f5bigip.__version__,
-    description='This repository provides utility classes and helper functions to ease the interaction between Ansible and F5 BIG-IP systems.',
+    name='ansible-common-f5',
+    version=ansible_common_f5.__version__,
+    description='This repository provides utility classes and helper functions to ease the interaction between Ansible and F5 systems.',
     license='Apache 2.0',
     author='Eric Jacob',
     author_email='erjac77@gmail.com',
-    url='https://github.com/erjac77/ansible-common-f5bigip',
+    url='https://github.com/erjac77/ansible-common-f5',
     packages=find_packages(),
     install_requires=['ansible', 'f5-sdk'],
-    keywords=['ansible', 'f5', 'bigip'],
+    keywords=['ansible', 'f5', 'bigip', 'bigiq', 'iworkflow'],
     classifiers=[
         'Intended Audience :: Developers',
         'Natural Language :: English',
