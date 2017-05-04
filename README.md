@@ -1,6 +1,6 @@
 # F5 COMMON UTILITY MODULE FOR ANSIBLE
 
-This repository provides utility classes and helper functions to ease the interaction between Ansible and F5 systems.
+This repository provides utility classes and helper functions to ease the interaction between Ansible and the following F5 systems:
 
 * BIG-IP
 * BIG-IQ
@@ -9,7 +9,7 @@ This repository provides utility classes and helper functions to ease the intera
 ## REQUIREMENTS
 
 * Ansible >= 2.2.0 (ansible)
-* F5 Python SDK >= 2.2.2 (f5-sdk)
+* F5 Python SDK >= 2.3.1 (f5-sdk)
 
 ## INSTALLATION
 
