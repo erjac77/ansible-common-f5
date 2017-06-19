@@ -272,13 +272,13 @@ class F5BaseObject(object):
         # If changed params, update the object
         if cparams:
             changed = True
-    
+
             if self.check_mode:
                 return changed
 
             self.obj.update(**cparams)
             self.obj.refresh()
-        
+
         return changed
 
     def flush(self):
