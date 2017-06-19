@@ -218,31 +218,56 @@ class F5BaseObject(object):
 
         # Determine if some params have changed
         for key, val in self.params.iteritems():
-            new_val = format_value(val)
 
-            if new_val is not None:
-                cur_val = None
+            try:
+                # If it's a list of dict
+                if all(isinstance(x, dict) for x in val):
+                    cur_val = list()
+                    new_val = val
+                    
+                    if hasattr(self.obj, key):
+                        cur_val = getattr(self.obj, key)
+                    
+                    if len(cur_val) != len(new_val):
+                        cparams[key] = new_val
 
-                if hasattr(self.obj, key):
-                    attr = getattr(self.obj, key)
-                    cur_val = format_value(attr)
+                    else:  
+                        cur_val.sort()
+                        new_val.sort() 
 
-                # If it's a list/set...
-                if isinstance(new_val, set):
-                    if cur_val is None:
-                        cur_val = set()
-                    if self.state == "present":
-                        new_list = list(cur_val | new_val)
-                        if len(new_list) > len(cur_val):
-                            cparams[key] = new_list
-                    if self.state == "absent":
-                        new_list = list(cur_val - new_val)
-                        if len(new_list) < len(cur_val):
-                            cparams[key] = new_list
+                        if cur_val != new_val:
+                            cparams[key] = new_val
+                
                 # If not...
                 else:
-                    if new_val != cur_val:
-                        cparams[key] = new_val
+                    raise TypeError
+                    
+            except TypeError:
+                new_val = format_value(val)
+
+                if new_val is not None:
+                    cur_val = None
+
+                    if hasattr(self.obj, key):
+                        attr = getattr(self.obj, key)
+                        cur_val = format_value(attr)
+                    
+                    # If it's a list/set...
+                    if isinstance(new_val, set):
+                        if cur_val is None:
+                            cur_val = set()
+                        if self.state == "present":
+                            new_list = list(cur_val | new_val)
+                            if len(new_list) > len(cur_val):
+                                cparams[key] = new_list
+                        if self.state == "absent":
+                            new_list = list(cur_val - new_val)
+                            if len(new_list) < len(cur_val):
+                                cparams[key] = new_list
+                    # If not...
+                    else:
+                        if new_val != cur_val:
+                            cparams[key] = new_val
 
         # If changed params, update the object
         if cparams:
