@@ -224,10 +224,10 @@ class F5BaseObject(object):
                 if all(isinstance(x, dict) for x in val):
                     cur_val = list()
                     new_val = val
-                    
+
                     if hasattr(self.obj, key):
                         cur_val = getattr(self.obj, key)
-                    
+
                     if len(cur_val) != len(new_val):
                         cparams[key] = new_val
 
@@ -237,11 +237,11 @@ class F5BaseObject(object):
 
                         if cur_val != new_val:
                             cparams[key] = new_val
-                
+
                 # If not...
                 else:
                     raise TypeError
-                    
+
             except TypeError:
                 new_val = format_value(val)
 
@@ -251,7 +251,7 @@ class F5BaseObject(object):
                     if hasattr(self.obj, key):
                         attr = getattr(self.obj, key)
                         cur_val = format_value(attr)
-                    
+
                     # If it's a list/set...
                     if isinstance(new_val, set):
                         if cur_val is None:
@@ -306,7 +306,16 @@ class F5NamedBaseObject(F5BaseObject):
     def _read(self):
         """Load an already configured object from the BIG-IP system."""
         self._check_load_params()
-        return self.methods['read'](**self._get_resource_id_from_params())
+        obj = self.methods['read'](**self._get_resource_id_from_params())
+
+        for attr, value in vars(obj).items():
+            if isinstance(value, list):
+                if all(isinstance(val, dict) for val in value):
+                    for key in value:
+                        if 'nameReference' in key:
+                            del key['nameReference']
+
+        return obj
 
     def _create(self):
         """Create the object on the BIG-IP system."""
