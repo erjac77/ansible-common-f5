@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright 2016, Eric Jacob <erjac77@gmail.com>
+# Copyright 2016-2017, Eric Jacob <erjac77@gmail.com>
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,14 +14,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import ansible_common_f5
-
 from setuptools import find_packages
 from setuptools import setup
+from .version import __version__
 
 setup(
     name='ansible-common-f5',
-    version=ansible_common_f5.__version__,
+    version=__version__,
     description='This repository provides utility classes and helper functions to ease the interaction between Ansible and F5 systems.',
     license='Apache 2.0',
     author='Eric Jacob',
@@ -29,12 +28,19 @@ setup(
     url='https://github.com/erjac77/ansible-common-f5',
     packages=find_packages(),
     install_requires=['ansible', 'f5-sdk'],
-    keywords=['ansible', 'f5', 'bigip', 'bigiq', 'iworkflow'],
+    keywords=['ansible', 'f5', 'bigip', 'bigiq', 'iworkflow', 'networking'],
     classifiers=[
         'Intended Audience :: Developers',
-        'Natural Language :: English',
+        'Intended Audience :: Information Technology',
+        'Intended Audience :: System Administrators',
+        'Intended Audience :: Telecommunications Industry',
         'License :: OSI Approved :: Apache Software License',
-        'Operating System :: OS Independent',
+        'Natural Language :: English',
         'Programming Language :: Python',
+        'Programming Language :: Python :: 2.7',
+        'Topic :: Software Development :: Libraries',
+        'Topic :: Software Development :: Libraries :: Application Frameworks',
+        'Topic :: Software Development :: Libraries :: Python Modules',
+        'Topic :: System :: Networking'
     ]
 )
