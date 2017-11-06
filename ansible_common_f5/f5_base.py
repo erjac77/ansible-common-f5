@@ -42,6 +42,7 @@ except ImportError as e:
     HAS_F5SDK_ERROR = str(e)
 
 from ansible.module_utils.basic import *
+from ansible.module_utils.urls import *
 
 # Common choices
 F5_ACTIVATION_CHOICES = ['enabled', 'disabled']
@@ -81,30 +82,30 @@ class F5Client(object):
         if not HAS_F5SDK:
             raise AnsibleF5Error("The python f5-sdk module is required. Try 'pip install f5-sdk'.")
 
-    def get_mgmt_root(self, f5_product_name, **kwargs):
+    def get_mgmt_root(self, f5_product_name, **conn_params):
         if f5_product_name == 'bigip':
             # Connect to BIG-IP
             return BigIpMgmtRoot(
-                kwargs['f5_hostname'],
-                kwargs['f5_username'],
-                kwargs['f5_password'],
-                port=kwargs['f5_port']
+                conn_params['f5_hostname'],
+                conn_params['f5_username'],
+                conn_params['f5_password'],
+                port=conn_params['f5_port']
             )
         elif f5_product_name == 'bigiq':
             # Connect to BIG-IQ
             return BigIqMgmtRoot(
-                kwargs['f5_hostname'],
-                kwargs['f5_username'],
-                kwargs['f5_password'],
-                port=kwargs['f5_port']
+                conn_params['f5_hostname'],
+                conn_params['f5_username'],
+                conn_params['f5_password'],
+                port=conn_params['f5_port']
             )
         elif f5_product_name == 'iworkflow':
             # Connect to iWorkflow
             return iWfMgmtRoot(
-                kwargs['f5_hostname'],
-                kwargs['f5_username'],
-                kwargs['f5_password'],
-                port=kwargs['f5_port']
+                conn_params['f5_hostname'],
+                conn_params['f5_username'],
+                conn_params['f5_password'],
+                port=conn_params['f5_port']
             )
 
 class F5BaseObject(object):
@@ -127,24 +128,20 @@ class F5BaseObject(object):
         # Store the params that are sent to the module
         self.params = kwargs
 
-        # The state of the object
-        self.state = self.params['state']
-        # The check mode ("dry-run") option
-        self.check_mode = self.params['check_mode']
+        # Store and remove BIG-IP and Ansible params
+        self.conn_params = dict()
+        self.conn_params['f5_hostname'] = self.params.pop('f5_hostname', None)
+        self.conn_params['f5_username'] = self.params.pop('f5_username', None)
+        self.conn_params['f5_password'] = self.params.pop('f5_password', None)
+        self.conn_params['f5_port'] = self.params.pop('f5_port', None)
+        self.state = self.params.pop('state', None)
+        self.check_mode = self.params.pop('check_mode', None)
 
         # Set Management Root
-        self.mgmt_root = F5Client().get_mgmt_root(self.get_f5_product_name(), **kwargs)
+        self.mgmt_root = F5Client().get_mgmt_root(self.get_f5_product_name(), **self.conn_params)
 
         # Set CRUD methods
         self.set_crud_methods()
-
-        # Remove BIG-IP and Ansible params
-        self.params.pop('f5_hostname', None)
-        self.params.pop('f5_username', None)
-        self.params.pop('f5_password', None)
-        self.params.pop('f5_port', None)
-        self.params.pop('state', None)
-        self.params.pop('check_mode', None)
 
         # Translate conflictual params (eg 'state')
         for k, v in self.params['tr'].iteritems():
@@ -292,6 +289,16 @@ class F5BaseObject(object):
 
         result.update(dict(changed=has_changed))
         return result
+
+    def get_version(self):
+        resp = open_url(
+            'https://' + self.conn_params['f5_hostname'] + ':' + str(self.conn_params['f5_port']) + '/mgmt/tm/sys/version/',
+            method="GET",
+            url_username = self.conn_params['f5_username'],
+            url_password = self.conn_params['f5_password'],
+            validate_certs=False
+        )
+        return json.loads(resp.read())['entries']['https://localhost/mgmt/tm/sys/version/0']['nestedStats']['entries']['Version']['description']
 
 class F5NamedBaseObject(F5BaseObject):
     """Base abstract class for all F5 named objects"""
