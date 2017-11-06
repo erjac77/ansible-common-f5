@@ -16,7 +16,7 @@
 
 from setuptools import find_packages
 from setuptools import setup
-from .version import __version__
+from version import __version__
 
 setup(
     name='ansible-common-f5',
