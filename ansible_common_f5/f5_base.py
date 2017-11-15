@@ -41,8 +41,8 @@ except ImportError as e:
     HAS_F5SDK = False
     HAS_F5SDK_ERROR = str(e)
 
-from ansible.module_utils.basic import *
-from ansible.module_utils.urls import *
+from ansible.module_utils.basic import AnsibleModule
+from ansible.module_utils.urls import open_url
 
 # Common choices
 F5_ACTIVATION_CHOICES = ['enabled', 'disabled']
@@ -144,11 +144,12 @@ class F5BaseObject(object):
         self.set_crud_methods()
 
         # Translate conflictual params (eg 'state')
-        for k, v in self.params['tr'].iteritems():
-            if k in self.params:
-                self.params[v] = self.params[k]
-                self.params.pop(k, None)
-        self.params.pop('tr', None)
+        if 'tr' in self.params:
+            for k, v in self.params['tr'].iteritems():
+                if k in self.params:
+                    self.params[v] = self.params[k]
+                    self.params.pop(k, None)
+            self.params.pop('tr', None)
 
         # Change Snake to Camel naming convention
         self.params = change_dict_naming_convention(self.params, snake_to_camel)

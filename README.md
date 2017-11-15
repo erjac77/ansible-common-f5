@@ -2,7 +2,7 @@
 
 This repository provides utility classes and helper functions to ease the interaction between Ansible and the following F5 systems:
 
-* BIG-IP
+* BIG-IP ([ansible-module-f5bigip](https://github.com/erjac77/ansible-module-f5bigip))
 * BIG-IQ
 * iWorkflow
 
