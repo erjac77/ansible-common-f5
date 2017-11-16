@@ -274,7 +274,10 @@ class F5BaseObject(object):
             if self.check_mode:
                 return changed
 
-            self.obj.update(**cparams)
+            if 'modify' in self.methods:
+                self.obj.modify(**cparams)
+            else:
+                self.obj.update(**cparams)
             self.obj.refresh()
 
         return changed
@@ -356,7 +359,7 @@ class F5NamedBaseObject(F5BaseObject):
             return True
 
         # Delete the object
-        self.obj._delete()
+        self.obj.delete()
 
         # Make sure it is gone
         if self._exists():
