@@ -10,6 +10,7 @@ This repository provides utility classes and helper functions to ease the intera
 
 * Ansible >= 2.4.0 (ansible)
 * F5 Python SDK >= 3.0.3 (f5-sdk)
+* DeepDiff >= 3.3.0 (deepdiff)
 
 ## INSTALLATION
 

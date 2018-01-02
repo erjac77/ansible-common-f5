@@ -19,16 +19,18 @@
 This module provides utility classes and helper functions to ease the interaction between Ansible and F5 systems.
 """
 
+import collections
 import re
 from abc import ABCMeta, abstractmethod
-from six import iterkeys
 
 import requests
+from deepdiff import DeepDiff
 from requests.exceptions import HTTPError
-# Disable Insecure Request Warning
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
-requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+from six import iterkeys
 
+# Disable Insecure Request Warning
+requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 # Make sure the f5-sdk is installed on the host
 HAS_F5SDK = True
@@ -67,10 +69,12 @@ F5_COMMON_NAMED_OBJ_ARGS = dict(
     sub_path=dict(type='str')
 )
 
+
 ### F5 Classes ###
 
 class AnsibleF5Error(Exception):
     pass
+
 
 class F5Client(object):
     """Base abstract class for all F5 clients
@@ -107,6 +111,7 @@ class F5Client(object):
                 conn_params['f5_password'],
                 port=conn_params['f5_port']
             )
+
 
 class F5BaseObject(object):
     """Base abstract class for all F5 objects
@@ -148,8 +153,8 @@ class F5BaseObject(object):
             for k, v in self.params['tr'].iteritems():
                 if k in self.params:
                     self.params[v] = self.params[k]
-                    self.params.pop(k, None)
-            self.params.pop('tr', None)
+                    del self.params[k]
+            del self.params['tr']
 
         # Change Snake to Camel naming convention
         self.params = change_dict_naming_convention(self.params, snake_to_camel)
@@ -212,60 +217,19 @@ class F5BaseObject(object):
         self._check_update_params()
 
         changed = False
-        cparams = dict() # The params that have changed
+        cparams = dict()  # The params that have changed
 
         # Determine if some params have changed
-        for key, val in self.params.iteritems():
-
-            try:
-                # If it's a list of dict
-                if all(isinstance(x, dict) for x in val):
-                    cur_val = list()
-                    new_val = val
-
-                    if hasattr(self.obj, key):
-                        cur_val = getattr(self.obj, key)
-
-                    if len(cur_val) != len(new_val):
+        for key, new_val in self.params.iteritems():
+            if new_val is not None:
+                if hasattr(self.obj, key):
+                    cur_val = convert(getattr(self.obj, key))
+                    ddiff = DeepDiff(cur_val, new_val, ignore_order=True)
+                    if ddiff:
                         cparams[key] = new_val
-
-                    else:  
-                        cur_val.sort()
-                        new_val.sort() 
-
-                        if cur_val != new_val:
-                            cparams[key] = new_val
-
-                # If not...
                 else:
-                    raise TypeError
-
-            except TypeError:
-                new_val = format_value(val)
-
-                if new_val is not None:
-                    cur_val = None
-
-                    if hasattr(self.obj, key):
-                        attr = getattr(self.obj, key)
-                        cur_val = format_value(attr)
-
-                    # If it's a list/set...
-                    if isinstance(new_val, set):
-                        if cur_val is None:
-                            cur_val = set()
-                        if self.state == "present":
-                            new_list = list(cur_val | new_val)
-                            if len(new_list) > len(cur_val):
-                                cparams[key] = new_list
-                        if self.state == "absent":
-                            new_list = list(cur_val - new_val)
-                            if len(new_list) < len(cur_val):
-                                cparams[key] = new_list
-                    # If not...
-                    else:
-                        if new_val != cur_val:
-                            cparams[key] = new_val
+                    if new_val:
+                        cparams[key] = new_val
 
         # If changed params, update the object
         if cparams:
@@ -296,13 +260,16 @@ class F5BaseObject(object):
 
     def get_version(self):
         resp = open_url(
-            'https://' + self.conn_params['f5_hostname'] + ':' + str(self.conn_params['f5_port']) + '/mgmt/tm/sys/version/',
+            'https://' + self.conn_params['f5_hostname'] + ':' + str(
+                self.conn_params['f5_port']) + '/mgmt/tm/sys/version/',
             method="GET",
-            url_username = self.conn_params['f5_username'],
-            url_password = self.conn_params['f5_password'],
+            url_username=self.conn_params['f5_username'],
+            url_password=self.conn_params['f5_password'],
             validate_certs=False
         )
-        return json.loads(resp.read())['entries']['https://localhost/mgmt/tm/sys/version/0']['nestedStats']['entries']['Version']['description']
+        return json.loads(resp.read())['entries']['https://localhost/mgmt/tm/sys/version/0']['nestedStats']['entries'][
+            'Version']['description']
+
 
 class F5NamedBaseObject(F5BaseObject):
     """Base abstract class for all F5 named objects"""
@@ -390,34 +357,35 @@ class F5NamedBaseObject(F5BaseObject):
         return str(name.replace(partition_prefix, ''))
 
     def _get_resource_id_from_params(self):
-        res_id_args = { 'name': self.params['name'] }
+        res_id_args = {'name': self.params['name']}
 
         if 'partition' in self.params and self.params['partition'] is not None:
-            res_id_args.update({ 'partition': self.params['partition'] })
+            res_id_args.update({'partition': self.params['partition']})
         if 'subPath' in self.params and self.params['subPath'] is not None:
-            res_id_args.update({ 'subPath': self.params['subPath'] })
+            res_id_args.update({'subPath': self.params['subPath']})
 
         return res_id_args
 
     def _get_resource_id_from_path(self, path):
         res_id_args = {}
-        path_segments = path.split('/')
+        path_segments = path.strip('/').split('/')
 
         if len(path_segments) == 1:
-            res_id_args.update({ 'name': path_segments[0] })
+            res_id_args.update({'name': path_segments[0]})
             if 'partition' in self.params and self.params['partition'] is not None:
-                res_id_args.update({ 'partition': self.params['partition'] })
+                res_id_args.update({'partition': self.params['partition']})
         elif len(path_segments) == 2:
-            res_id_args.update({ 'partition': path_segments[0] })
-            res_id_args.update({ 'name': path_segments[1] })
+            res_id_args.update({'partition': path_segments[0]})
+            res_id_args.update({'name': path_segments[1]})
         elif len(path_segments) == 3:
-            res_id_args.update({ 'partition': path_segments[0] })
-            res_id_args.update({ 'subPath': path_segments[1] })
-            res_id_args.update({ 'name': path_segments[2] })
+            res_id_args.update({'partition': path_segments[0]})
+            res_id_args.update({'subPath': path_segments[1]})
+            res_id_args.update({'name': path_segments[2]})
         else:
             raise AnsibleF5Error("Invalid resource id.")
 
         return res_id_args
+
 
 class F5UnnamedBaseObject(F5BaseObject):
     """Base abstract class for all F5 unnamed objects
@@ -442,6 +410,7 @@ class F5UnnamedBaseObject(F5BaseObject):
     def _absent(self):
         return self._update()
 
+
 ### Ansible F5 module classes ###
 
 class AnsibleModuleF5NamedObject(AnsibleModule):
@@ -453,7 +422,10 @@ class AnsibleModuleF5NamedObject(AnsibleModule):
         if argument_spec:
             merged_arg_spec.update(argument_spec)
 
-        super(AnsibleModuleF5NamedObject, self).__init__(argument_spec=merged_arg_spec, supports_check_mode=supports_check_mode, mutually_exclusive=mutually_exclusive)
+        super(AnsibleModuleF5NamedObject, self).__init__(argument_spec=merged_arg_spec,
+                                                         supports_check_mode=supports_check_mode,
+                                                         mutually_exclusive=mutually_exclusive)
+
 
 class AnsibleModuleF5UnnamedObject(AnsibleModule):
     def __init__(self, argument_spec, supports_check_mode, mutually_exclusive=[]):
@@ -463,7 +435,10 @@ class AnsibleModuleF5UnnamedObject(AnsibleModule):
         if argument_spec:
             merged_arg_spec.update(argument_spec)
 
-        super(AnsibleModuleF5UnnamedObject, self).__init__(argument_spec=merged_arg_spec, supports_check_mode=supports_check_mode, mutually_exclusive=mutually_exclusive)
+        super(AnsibleModuleF5UnnamedObject, self).__init__(argument_spec=merged_arg_spec,
+                                                           supports_check_mode=supports_check_mode,
+                                                           mutually_exclusive=mutually_exclusive)
+
 
 ### Helper functions ###
 
@@ -474,13 +449,16 @@ def _missing_required_params(rqset, params):
     if required_minus_received != set():
         return list(required_minus_received)
 
+
 def camel_to_snake(name):
     camel_pat = re.compile(r'([A-Z])')
     return camel_pat.sub(lambda x: '_' + x.group(1).lower(), name)
 
+
 def snake_to_camel(name):
     under_pat = re.compile(r'_([a-z])')
     return under_pat.sub(lambda x: x.group(1).upper(), name)
+
 
 def change_dict_naming_convention(d, convert_fn):
     new = {}
@@ -491,12 +469,13 @@ def change_dict_naming_convention(d, convert_fn):
 
     return new
 
-def format_value(value):
-    formatted_value = value
 
-    if isinstance(value, basestring):
-        formatted_value = value.strip()
-    if isinstance(value, list):
-        formatted_value = set(value)
-
-    return formatted_value
+def convert(data):
+    if isinstance(data, basestring):
+        return str(data.strip())
+    elif isinstance(data, collections.Mapping):
+        return dict(map(convert, data.iteritems()))
+    elif isinstance(data, collections.Iterable):
+        return type(data)(map(convert, data))
+    else:
+        return data
