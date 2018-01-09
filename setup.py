@@ -28,7 +28,7 @@ setup(
     author_email='erjac77@gmail.com',
     url='https://github.com/erjac77/ansible-common-f5',
     packages=find_packages(),
-    install_requires=['ansible', 'f5-sdk', 'deepdiff'],
+    install_requires=['ansible', 'deepdiff', 'f5-sdk', 'future', 'requests', 'six'],
     keywords=['ansible', 'f5', 'bigip', 'bigiq', 'iworkflow', 'networking'],
     classifiers=[
         'Intended Audience :: Developers',

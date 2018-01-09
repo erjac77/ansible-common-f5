@@ -1,5 +1,8 @@
 -e .
 
 ansible>=2.4.0
-f5-sdk>=3.0.3
 deepdiff>=3.3.0
+f5-sdk>=3.0.8
+future>=0.16.0
+requests>=2.18.4
+six>=1.11.0

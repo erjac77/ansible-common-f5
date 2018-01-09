@@ -25,9 +25,10 @@ from abc import ABCMeta, abstractmethod
 
 import requests
 from deepdiff import DeepDiff
+from past.builtins import basestring
 from requests.exceptions import HTTPError
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
-from six import iterkeys
+from six import iteritems, iterkeys, with_metaclass
 
 # Disable Insecure Request Warning
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
@@ -77,7 +78,7 @@ class AnsibleF5Error(Exception):
 
 
 class F5Client(object):
-    """Base abstract class for all F5 clients
+    """Base class for all F5 clients
 
     It provides an interface to a single F5 system.
     """
@@ -113,13 +114,11 @@ class F5Client(object):
             )
 
 
-class F5BaseObject(object):
+class F5BaseObject(with_metaclass(ABCMeta)):
     """Base abstract class for all F5 objects
 
     It represents a F5 resource configurable by Ansible.
     """
-
-    __metaclass__ = ABCMeta
 
     def __init__(self, **kwargs):
         """Prepare the parameters needed by this module."""
@@ -150,7 +149,7 @@ class F5BaseObject(object):
 
         # Translate conflictual params (eg 'state')
         if 'tr' in self.params:
-            for k, v in self.params['tr'].iteritems():
+            for k, v in iteritems(self.params['tr']):
                 if k in self.params:
                     self.params[v] = self.params[k]
                     del self.params[k]
@@ -220,7 +219,7 @@ class F5BaseObject(object):
         cparams = dict()  # The params that have changed
 
         # Determine if some params have changed
-        for key, new_val in self.params.iteritems():
+        for key, new_val in iteritems(self.params):
             if new_val is not None:
                 if hasattr(self.obj, key):
                     cur_val = convert(getattr(self.obj, key))
@@ -298,7 +297,7 @@ class F5NamedBaseObject(F5BaseObject):
     def _create(self):
         """Create the object on the BIG-IP system."""
         # Remove empty params
-        params = dict((k, v) for k, v in self.params.iteritems() if v is not None)
+        params = dict((k, v) for k, v in iteritems(self.params) if v is not None)
 
         # Check params
         self._check_create_params()
@@ -463,7 +462,7 @@ def snake_to_camel(name):
 def change_dict_naming_convention(d, convert_fn):
     new = {}
 
-    for k, v in d.iteritems():
+    for k, v in iteritems(d):
         new_v = v
         new[convert_fn(k)] = new_v
 
@@ -474,7 +473,7 @@ def convert(data):
     if isinstance(data, basestring):
         return str(data.strip())
     elif isinstance(data, collections.Mapping):
-        return dict(map(convert, data.iteritems()))
+        return dict(map(convert, iteritems(data)))
     elif isinstance(data, collections.Iterable):
         return type(data)(map(convert, data))
     else:
