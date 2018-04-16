@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright 2016-2017, Eric Jacob <erjac77@gmail.com>
+# Copyright 2016-2018, Eric Jacob <erjac77@gmail.com>
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -223,7 +223,8 @@ class F5BaseObject(with_metaclass(ABCMeta)):
             if new_val is not None:
                 if hasattr(self.obj, key):
                     cur_val = convert(getattr(self.obj, key))
-                    ddiff = DeepDiff(cur_val, new_val, ignore_order=True)
+                    ddiff = DeepDiff(cur_val, new_val, ignore_order=True,
+                                     exclude_paths={"root['nameReference']", "root['poolReference']"})
                     if ddiff:
                         cparams[key] = new_val
                 else:
