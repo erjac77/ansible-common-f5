@@ -18,7 +18,7 @@ This repository provides utility classes and helper functions to ease the intera
 ## INSTALLATION
 
 ```shell
-sudo pip install git+git://github.com/erjac77/ansible-common-f5.git#egg=ansible-common-f5
+sudo pip install git+https://github.com/erjac77/ansible-common-f5.git#egg=ansible-common-f5
 ```
 
 ## LICENSE
