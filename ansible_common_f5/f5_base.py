@@ -45,7 +45,7 @@ except ImportError as e:
     HAS_F5SDK_ERROR = str(e)
 
 from ansible.module_utils.basic import AnsibleModule
-from ansible.module_utils.urls import open_url
+from ansible.module_utils.six import string_types
 
 # Common choices
 F5_ACTIVATION_CHOICES = ['enabled', 'disabled']
@@ -248,26 +248,18 @@ class F5BaseObject(with_metaclass(ABCMeta)):
 
     def flush(self):
         """Send the buffered object to the BIG-IP system, depending upon the state of the object."""
-        result = dict()
+        result = dict(changed=False)
 
         if self.state == "present":
-            has_changed = self._present()
+            result['changed'] = self._present()
         elif self.state == "absent":
-            has_changed = self._absent()
+            result['changed'] = self._absent()
 
-        result.update(dict(changed=has_changed))
         return result
 
     def get_version(self):
-        resp = open_url(
-            'https://' + self.conn_params['f5_hostname'] + ':' + str(
-                self.conn_params['f5_port']) + '/mgmt/tm/sys/version/',
-            method="GET",
-            url_username=self.conn_params['f5_username'],
-            url_password=self.conn_params['f5_password'],
-            validate_certs=False
-        )
-        return json.loads(resp.read())['entries']['https://localhost/mgmt/tm/sys/version/0']['nestedStats']['entries'][
+        version = self.mgmt_root.tm.sys.version.load()
+        return version.entries['https://localhost/mgmt/tm/sys/version/0']['nestedStats']['entries'][
             'Version']['description']
 
 
@@ -479,3 +471,10 @@ def convert(data):
         return type(data)(map(convert, data))
     else:
         return data
+
+
+def to_lines(stdout):
+    for item in stdout:
+        if isinstance(item, string_types):
+            item = str(item).split('\n')
+        yield item
