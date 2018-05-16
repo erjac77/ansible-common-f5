@@ -1,6 +1,7 @@
 #!/usr/bin/python
+# -*- coding: utf-8 -*-
 #
-# Copyright 2016-2017, Eric Jacob <erjac77@gmail.com>
+# Copyright 2016-2018, Eric Jacob <erjac77@gmail.com>
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,13 +23,13 @@ from version import __version__
 setup(
     name='ansible-common-f5',
     version=__version__,
-    description='This repository provides utility classes and helper functions to ease the interaction between Ansible and F5 systems.',
+    description='Utility classes and helper functions to ease the interaction between Ansible and F5 systems.',
     license='Apache 2.0',
     author='Eric Jacob',
     author_email='erjac77@gmail.com',
     url='https://github.com/erjac77/ansible-common-f5',
     packages=find_packages(),
-    install_requires=['ansible', 'deepdiff', 'f5-sdk', 'future', 'requests', 'six'],
+    install_requires=['ansible', 'deepdiff', 'f5-sdk', 'requests'],
     keywords=['ansible', 'f5', 'bigip', 'bigiq', 'iworkflow', 'networking'],
     classifiers=[
         'Intended Audience :: Developers',

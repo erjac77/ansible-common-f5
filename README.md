@@ -11,14 +11,12 @@ This repository provides utility classes and helper functions to ease the intera
 * Ansible >= 2.4.0 (ansible)
 * DeepDiff >= 3.3.0 (deepdiff)
 * F5 Python SDK >= 3.0.14 (f5-sdk)
-* Python-Future >= 0.16.0 (future)
 * Requests >= 2.18.4 (requests)
-* Six >= 1.11.0 (six)
 
 ## INSTALLATION
 
 ```shell
-sudo pip install git+https://github.com/erjac77/ansible-common-f5.git#egg=ansible-common-f5
+pip install git+https://github.com/erjac77/ansible-common-f5.git#egg=ansible-common-f5
 ```
 
 ## LICENSE
