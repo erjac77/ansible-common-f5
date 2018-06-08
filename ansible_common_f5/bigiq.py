@@ -45,8 +45,10 @@ class F5BigIqClient(F5BaseClient):
     @property
     def mgmt_root(self):
         err = None
+        retries = self.provider.get('f5_retries', 3)
+        timeout = self.provider.get('f5_timeout', 10)
 
-        for x in range(3):
+        for x in range(retries):
             try:
                 return BigIqMgmtRoot(
                     self.provider['f5_hostname'],
@@ -57,9 +59,10 @@ class F5BigIqClient(F5BaseClient):
                 )
             except Exception as exc:
                 err = exc
-                time.sleep(10)
+                time.sleep(timeout)
 
-        err_msg = 'Unable to connect to {0} on port {1}.'.format(self.provider['f5_hostname'], self.provider['f5_port'])
+        err_msg = 'Unable to connect to host {0} on port {1}.'.format(self.provider['f5_hostname'],
+                                                                      self.provider['f5_port'])
         if err is not None:
             err_msg += ' The error message was "{0}".'.format(str(err))
         raise AnsibleF5Error(err_msg)
