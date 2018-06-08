@@ -2,5 +2,5 @@
 
 ansible>=2.4.0
 deepdiff>=3.3.0
-f5-sdk>=3.0.14
+f5-sdk>=3.0.15
 requests>=2.18.4
