@@ -1,3 +1,10 @@
+🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨
+
+**_F5 common utility module for Ansible_ (`ansible-common-f5`) has been deprecated_.<br/>
+Please use our new [Ansible Role for F5 systems (`ansible-role-f5`)](https://github.com/erjac77/ansible-role-f5).**
+
+🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨
+
 # F5 COMMON UTILITY MODULE FOR ANSIBLE
 
 This repository provides utility classes and helper functions to ease the interaction between Ansible and the following F5 systems:
